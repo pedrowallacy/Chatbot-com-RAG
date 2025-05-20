@@ -3,8 +3,11 @@ import { ref } from 'vue'
 
 const pergunta = ref('')
 const resposta = ref('')
+const historico = ref([])
 
 const enviarPergunta = async () => {
+    historico.value.push({ role: 'user', content: pergunta.value })
+
   const res = await fetch('http://localhost:5000/chat/suporte', {
     method: 'POST',
     headers: {
@@ -14,8 +17,10 @@ const enviarPergunta = async () => {
     credentials: 'include'
   })
 
-  const data = await res.json()
-  resposta.value = data.resposta
+const data = await res.json()
+historico.value.push({ role: 'assistant', content: data.resposta })
+
+pergunta.value = ''
 }
 </script>
 
@@ -23,6 +28,9 @@ const enviarPergunta = async () => {
   <div>
     <input v-model="pergunta" placeholder="Digite sua pergunta" />
     <button @click="enviarPergunta">Enviar</button>
-    <p>Resposta: {{ resposta }}</p>
+
+    <div v-for="(msg, index) in historico" :key="index">
+      <p><strong>{{ msg.role === 'user' ? 'Você' : 'Assistente' }}:</strong> {{ msg.content }}</p>
+    </div>
   </div>
 </template>

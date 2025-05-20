@@ -5,7 +5,6 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import time
-import logging
 
 load_dotenv()
 
@@ -76,7 +75,7 @@ def esperar_run_finalizar(thread_id, run_id, timeout=30):
             raise Exception(f"Execução falhou com status: {run_status.status}")
         elif time.time() - tempo_inicial > timeout:
             raise TimeoutError("Timeout ao aguardar o run do assistente.")
-        time.sleep(1)  # espera 1 segundo antes de checar novamente
+        time.sleep(0.1) 
 
 @app.route("/version")
 def version():
