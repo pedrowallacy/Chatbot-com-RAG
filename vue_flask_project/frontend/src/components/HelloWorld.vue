@@ -59,11 +59,35 @@ const enviarPergunta = async () => {
 </script>
 
 <style scoped>
-body {
-  background: #ffffff;
+html, body {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: #343541;
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  color: #ececf1;
+  overflow: hidden !important;
+}
+
+#app {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+body, html {
+  height: 100vh;
   margin: 0;
   padding: 0;
   overflow: hidden;
+  background: #343541;
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  color: #ececf1;
+  overflow: hidden !important; /* Remove scroll do body e html */
+  position: fixed;
+  width: 100vw;
 }
 
 .chat-container {
@@ -72,58 +96,83 @@ body {
   align-items: center;
   justify-content: flex-start;
   height: 100vh;
-  background: #fefeff;
   width: 100vw;
-  overflow: hidden;
+  overflow: hidden; /* Impede scroll extra */
+  position: relative;
+  background: #343541;
 }
 
 .chat-history {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
-  padding: 24px 0 32px 0;
+  padding: 40px 0 24px 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   width: 100%;
-  max-width: 700px;
-  /* Remove extra scroll from parent */
+  max-width: 820px;
+  margin: 0 auto 120px auto;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #444654 #343541;
+  overflow-x: hidden; /* Remove scroll do eixo X */
+  min-height: 0;
+}
+
+.chat-history::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-history::-webkit-scrollbar-thumb {
+  background: #444654;
+  border-radius: 8px;
 }
 
 .chat-message {
   display: flex;
   flex-direction: column;
   max-width: 60%;
+  margin-top: 18px;
+  margin-bottom: 0;
 }
 
 .chat-message.user {
   align-self: flex-end;
   align-items: flex-end;
+  margin-right: 0;
+  margin-left: auto;
 }
 
 .chat-message.assistant {
   align-self: flex-start;
   align-items: flex-start;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .chat-author {
   font-size: 0.85em;
-  color: #888;
+  color: #8e8ea0;
   margin-bottom: 2px;
+  margin-left: 6px;
 }
 
 .chat-bubble {
-  background: #e0e0e0;
-  color: #222;
-  border-radius: 16px;
-  padding: 10px 16px;
+  background: #444654;
+  color: #ececf1;
+  border-radius: 12px;
+  padding: 18px 24px;
   word-break: break-word;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  font-size: 1.08em;
+  line-height: 1.7;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
 .chat-message.user .chat-bubble {
-  background: #1976d2;
-  color: #fff;
+  background: #2a2b32;
+  color: #ececf1;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
 .input-container {
@@ -135,51 +184,59 @@ body {
   justify-content: center;
   align-items: center;
   padding: 32px 0 32px 0;
-  background: transparent;
-  box-shadow: none;
+  background: linear-gradient(0deg, #343541 80%, rgba(52,53,65,0) 100%);
+  box-shadow: 0 -2px 16px 0 rgba(0,0,0,0.10);
   z-index: 100;
   gap: 8px;
-  border-top: none;
+  border-top: 1px solid #444654;
 }
 
 .input-inner {
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 700px;
-  background: #2a2a2c;
+  max-width: 820px;
+  background: #40414f;
   border-radius: 24px;
-  padding: 12px 20px;
+  padding: 16px 24px;
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.18);
-  gap: 8px;
+  gap: 10px;
+  border: none;
 }
 
 .input-inner input {
   flex: 1;
   background: transparent;
   border: none;
-  color: #fff;
-  font-size: 1.1em;
+  color: #ececf1;
+  font-size: 1.13em;
   outline: none;
-  padding: 0;
+  padding: 0 4px;
+  font-family: inherit;
+}
+
+.input-inner input::placeholder {
+  color: #8e8ea0;
+  opacity: 1;
 }
 
 .input-inner button {
-  background: #44444a;
+  background: #444654;
   border: none;
-  color: #fff;
+  color: #ececf1;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
-  font-size: 1.2em;
+  transition: background 0.2s, box-shadow 0.2s;
+  font-size: 1.3em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
 .input-inner button:hover {
-  background: #303087;
+  background: #565869;
 }
 </style>
