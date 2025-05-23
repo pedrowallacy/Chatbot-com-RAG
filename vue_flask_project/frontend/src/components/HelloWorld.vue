@@ -59,63 +59,51 @@ const enviarPergunta = async () => {
 </script>
 
 <style scoped>
-html, body {
-  height: 100vh;
+
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  height: 100%;
   background: #343541;
   font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-  color: #ececf1;
-  overflow: hidden !important;
+  color: #1a1a82;
+  overflow: hidden;
 }
 
 #app {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-body, html {
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: #343541;
-  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-  color: #ececf1;
-  overflow: hidden !important; /* Remove scroll do body e html */
-  position: fixed;
-  width: 100vw;
+  width: 100%;
+  height: 100%;
 }
 
 .chat-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden; /* Impede scroll extra */
   position: relative;
-  background: #343541;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;          /* nada além do .chat-history vai rolar */
+  background: url("/backgroud_login.png") no-repeat center center;
+  background-size: cover;
 }
 
 .chat-history {
-  flex: 1 1 auto;
+  flex: 1;
   overflow-y: auto;
-  padding: 40px 0 24px 0;
+  padding: 40px 0 24px;
+  padding-bottom: 120px;
   display: flex;
   flex-direction: column;
   gap: 0;
   width: 100%;
-  max-width: 820px;
-  margin: 0 auto 120px auto;
+  max-width: 820px; 
+  margin: 0 auto;
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: #444654 #343541;
-  overflow-x: hidden; /* Remove scroll do eixo X */
   min-height: 0;
 }
 
@@ -183,11 +171,12 @@ body, html {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 32px 0 32px 0;
+  padding: 16px;
   background: linear-gradient(0deg, #343541 80%, rgba(52,53,65,0) 100%);
   box-shadow: 0 -2px 16px 0 rgba(0,0,0,0.10);
   z-index: 100;
   gap: 8px;
+  margin-top: auto;
   border-top: 1px solid #444654;
 }
 
