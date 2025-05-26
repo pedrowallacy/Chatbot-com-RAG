@@ -71,7 +71,7 @@ html, body {
   height: 100%;
   background: #343541;
   font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-  color: #1a1a82;
+  color: #626298;
   overflow: hidden;
 }
 
@@ -117,26 +117,22 @@ html, body {
 }
 
 .chat-message {
-  /*width: 100%;*/
   display: flex;
   flex-direction: column;
-  align-self: center;
   max-width: 60%;
+  width: 100%;
   margin-top: 18px;
-  /*margin-bottom: 0;*/
 }
 
 .chat-message.user {
- /*ign-self: center;
-  align-items: center;*/
-  margin-right: 0;
+  align-items: flex-end;
   margin-left: auto;
+  margin-right: auto;
 }
 
 .chat-message.assistant {
- /*lign-self: center;
-  align-items: center;*/
-  margin-left: 0;
+  align-items: flex-start;
+  margin-left: auto;
   margin-right: auto;
 }
 
@@ -148,27 +144,31 @@ html, body {
 }
 
 .chat-bubble {
-  background: #3948a9;
-  color: #ececf1;
+  background: #fffbe6;
+  color: #7a6a2f;
   border-radius: 12px;
   padding: 18px 24px;
   word-break: break-word;
   font-size: 1.08em;
   line-height: 1.7;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  border: 1.5px solid #e6c200;
+  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
 }
 
 .chat-message.assistant .chat-bubble {
   margin-right: 20px;
+  background: #fffbe6;
+  color: #7a6a2f;
+  border: 1.5px solid #e6c200;
 }
 
 .chat-message.user .chat-bubble {
   margin-left: 20px;
-  background: #2a2b32;
-  color: #ececf1;
+  background: #f7d774;
+  color: #7a6a2f;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  border: 1.5px solid #e6c200;
+  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
 }
 
 /*container de entrada*/
@@ -181,12 +181,12 @@ html, body {
   justify-content: center;
   align-items: center;
   padding: 16px;
-  background: linear-gradient(0deg, #343541 80%, rgba(52,53,65,0) 100%);
-  box-shadow: 0 -2px 16px 0 rgba(0,0,0,0.10);
+  background: transparent;
+  box-shadow: none;
   z-index: 100;
   gap: 8px;
   margin-top: auto;
-  border-top: 1px solid #444654;
+  border-top: none;
 }
 
 /*entrada da pergunta*/
@@ -196,12 +196,12 @@ html, body {
   justify-content: center;
   width: 100%;
   max-width: 820px;
-  background: #1db02e;
+  background: #fffbe6;
   border-radius: 24px;
-  padding: 16px 24px;
-  box-shadow: 0 2px 16px 0 rgba(185, 12, 12, 0.18);
+  padding: 14px 20px;
+  box-shadow: 0 2px 12px 0 rgba(191, 160, 70, 0.10);
   gap: 10px;
-  border: none;
+  border: 1.5px solid #e6c200;
 }
 
 /*entrada da pergunta*/
@@ -209,17 +209,17 @@ html, body {
   flex: 1;
   background: transparent;
   border: none;
-  color: #f4f4f4;
+  color: #7a6a2f;
   font-size: 1.13em;
   outline: none;
-  padding: 0 px;
+  padding: 0;
   font-family: inherit;
 }
 
 /*input da pergunta*/
 .input-inner input::placeholder {
-  color: #ff0080;
-  opacity: 0.8;
+  color: #bfa046;
+  opacity: 0.7;
   font-size: 1.13em;
   font-family: inherit;
   font-weight: 400;
@@ -227,23 +227,27 @@ html, body {
 
 /*botão de enviar*/
 .input-inner button {
-  background: #1e2b7c;
+  background: #e6c200;
   border: none;
-  color: #ececf1;
-  border-radius: 50%;
-  width: 44px;
+  color: #fff;
+  border-radius: 24px;
+  min-width: 90px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
-  font-size: 1.3em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  font-size: 1.15em;
+  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
+  padding: 0 24px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /*botão de enviar*/
 .input-inner button:hover {
-  background: #c7c8d1;
+  background: #bfa046;
+  color: #fffbe6;
 }
 </style>
