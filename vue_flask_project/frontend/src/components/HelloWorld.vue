@@ -16,6 +16,10 @@
         <button @click="enviarPergunta">Enviar</button>
       </div>
     </div>
+    <div v-if="loading" class="loading-indicator-inline">
+      <span class="spinner-inline"></span>
+      <span class="loading-text-inline">Aguarde...</span>
+    </div>
   </div>
 </template>
 
@@ -26,10 +30,14 @@ const pergunta = ref('')
 const resposta = ref('')
 const historico = ref([])
 const chatHistory = ref(null)
+const loading = ref(false)
 
 const enviarPergunta = async () => {
   if (!pergunta.value.trim()) return
   historico.value.push({ role: 'user', content: pergunta.value })
+  const perguntaAtual = pergunta.value
+  pergunta.value = '' // Limpa o input imediatamente
+  loading.value = true
 
   await nextTick(() => {
     if (chatHistory.value) {
@@ -42,13 +50,13 @@ const enviarPergunta = async () => {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: new URLSearchParams({ pergunta: pergunta.value }),
+    body: new URLSearchParams({ pergunta: perguntaAtual }),
     credentials: 'include'
   })
 
   const data = await res.json()
   historico.value.push({ role: 'assistant', content: data.resposta })
-  pergunta.value = ''
+  loading.value = false
 
   await nextTick(() => {
     if (chatHistory.value) {
@@ -70,7 +78,7 @@ html, body {
   height: 100%;
   height: 100%;
   background: #343541;
-  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  font-family: 'Arial', 'Segoe UI', 'Roboto', sans-serif;
   color: #626298;
   overflow: hidden;
 }
@@ -82,38 +90,47 @@ html, body {
 
 .chat-container {
   position: fixed;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;      
   background: url("/backgroud_login.png") no-repeat center center;
   background-size: cover;
+   left: 0;
+  top: 0;
+   margin: 0;
+  padding: 0;
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 50px;
 }
 
 .chat-history {
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   flex: 1;
   overflow-y: auto;
-  padding: 40px 0 24px;
+  padding:  0 0 120px 0;
   padding-bottom: 120px;
   display: flex;
   flex-direction: column;
   gap: 0;
-  width: 99%; 
+  width: 100%; 
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: #2e3b8f #343541;
+  scrollbar-color: #a8a8a4;
   min-height: 0;
+  margin: 0;
 }
 
 .chat-history::-webkit-scrollbar {
-  width: 8px;
-}
-.chat-history::-webkit-scrollbar-thumb {
-  background: #444654;
-  border-radius: 8px;
+  width: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  background: transparent;
 }
 
 .chat-message {
@@ -249,5 +266,37 @@ html, body {
 .input-inner button:hover {
   background: #bfa046;
   color: #fffbe6;
+}
+
+/* Exemplo para mudar só no chat: */
+.chat-container, .chat-history, .chat-message, .chat-bubble, .input-inner, .input-inner input, .input-inner button {
+  font-family: 'Arial', 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Estilos para o indicador de carregamento inline */
+.loading-indicator-inline {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.spinner-inline {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: #e6c200;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text-inline {
+  color: #7a6a2f;
+  font-size: 1em;
+  margin-left: 6px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
