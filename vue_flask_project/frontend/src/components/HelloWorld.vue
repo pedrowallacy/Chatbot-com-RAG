@@ -7,7 +7,17 @@
         :class="['chat-message', msg.role]"
       >
         <p class="chat-author">{{ msg.role === 'user' ? 'Você' : 'Assistente' }}</p>
-        <div class="chat-bubble">{{ msg.content }}</div>
+        <div class="chat-bubble">
+          <template v-if="msg.role === 'assistant' && loading && index === historico.length - 1">
+            <div style="display: flex; align-items: center; justify-content: center;">
+              <span class="spinner-inline"></span>
+              <span class="loading-text-inline">Aguarde...</span>
+            </div>
+          </template>
+          <template v-else>
+            {{ msg.content }}
+          </template>
+        </div>
       </div>
     </div>
     <div class="input-container">
@@ -15,10 +25,6 @@
         <input v-model="pergunta" placeholder="Digite sua pergunta" @keyup.enter="enviarPergunta" />
         <button @click="enviarPergunta">Enviar</button>
       </div>
-    </div>
-    <div v-if="loading" class="loading-indicator-inline">
-      <span class="spinner-inline"></span>
-      <span class="loading-text-inline">Aguarde...</span>
     </div>
   </div>
 </template>
@@ -38,6 +44,8 @@ const enviarPergunta = async () => {
   const perguntaAtual = pergunta.value
   pergunta.value = '' // Limpa o input imediatamente
   loading.value = true
+  // Adiciona placeholder de resposta do assistente
+  historico.value.push({ role: 'assistant', content: '' })
 
   await nextTick(() => {
     if (chatHistory.value) {
@@ -55,7 +63,8 @@ const enviarPergunta = async () => {
   })
 
   const data = await res.json()
-  historico.value.push({ role: 'assistant', content: data.resposta })
+  // Atualiza a última resposta do assistente
+  historico.value[historico.value.length - 1].content = data.resposta
   loading.value = false
 
   await nextTick(() => {
