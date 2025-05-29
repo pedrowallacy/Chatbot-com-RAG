@@ -6,13 +6,16 @@
         :key="index"
         :class="['chat-message', msg.role]"
       >
-        <p class="chat-author">{{ msg.role === 'user' ? 'Você' : 'Assistente' }}</p>
+        <p class="chat-author">{{ msg.role === 'user' ? 'Você' : nomeAssistente }}</p>
         <div class="chat-bubble">
           <template v-if="msg.role === 'assistant' && loading && index === historico.length - 1">
             <div style="display: flex; align-items: center; justify-content: center;">
               <span class="spinner-inline"></span>
               <span class="loading-text-inline">Aguarde...</span>
             </div>
+          </template>
+          <template v-else-if="msg.role === 'assistant' && typingIndex === index">
+            {{ typingContent }}<span v-if="typingContent.length < msg.content.length">|</span>
           </template>
           <template v-else>
             {{ msg.content }}
@@ -30,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, watch } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 
 const pergunta = ref('')
 const resposta = ref('')
@@ -38,13 +41,49 @@ const historico = ref([])
 const chatHistory = ref(null)
 const loading = ref(false)
 
+// Nome dinâmico do assistente
+const nomeAssistente = ref('Assistente')
+
+onMounted(async () => {
+  try {
+    const res = await fetch('http://localhost:5000/assistant_name/suporte')
+    const data = await res.json()
+    if (data.name) nomeAssistente.value = data.name
+  } catch (e) {
+    nomeAssistente.value = 'Assistente'
+  }
+})
+
+// Typing effect state
+const typingIndex = ref(null)
+const typingContent = ref('')
+let typingTimeout = null
+
+const typeText = async (fullText, msgIndex) => {
+  typingContent.value = ''
+  typingIndex.value = msgIndex
+  let i = 0
+  function typeChar() {
+    if (typingIndex.value !== msgIndex) return // Prevent race conditions
+    if (i <= fullText.length) {
+      typingContent.value = fullText.slice(0, i)
+      historico.value[msgIndex].content = typingContent.value
+      i++
+      typingTimeout = setTimeout(typeChar, 18) // typing speed
+    } else {
+      typingIndex.value = null
+      typingContent.value = ''
+    }
+  }
+  typeChar()
+}
+
 const enviarPergunta = async () => {
   if (!pergunta.value.trim()) return
   historico.value.push({ role: 'user', content: pergunta.value })
   const perguntaAtual = pergunta.value
   pergunta.value = '' // Limpa o input imediatamente
   loading.value = true
-  // Adiciona placeholder de resposta do assistente
   historico.value.push({ role: 'assistant', content: '' })
 
   await nextTick(() => {
@@ -63,9 +102,9 @@ const enviarPergunta = async () => {
   })
 
   const data = await res.json()
-  // Atualiza a última resposta do assistente
-  historico.value[historico.value.length - 1].content = data.resposta
   loading.value = false
+  // Typing effect for assistant
+  await typeText(data.resposta, historico.value.length - 1)
 
   await nextTick(() => {
     if (chatHistory.value) {
@@ -296,12 +335,19 @@ html, body {
   border-top-color: #e6c200;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  background: none;
 }
 
 .loading-text-inline {
   color: #7a6a2f;
   font-size: 1em;
   margin-left: 6px;
+  background: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  filter: none !important;
 }
 
 @keyframes spin {

@@ -112,5 +112,17 @@ def reset_thread():
     session.pop("thread_id", None)
     return jsonify({"mensagem": "Thread reiniciada."})
 
+# NOVO ENDPOINT PARA PEGAR O NOME DO ASSISTENTE
+@app.route("/assistant_name/<rota_assistente>", methods=["GET"])
+def get_assistant_name(rota_assistente):
+    assistant_id = ROTAS_ASSISTENTES.get(rota_assistente)
+    if not assistant_id:
+        return jsonify({"erro": "Rota de assistente inválida"}), 404
+    try:
+        assistant = client.beta.assistants.retrieve(assistant_id)
+        return jsonify({"name": assistant.name})
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
 if __name__ == "__main__":
-    app.run(debug=True) 
+    app.run(debug=True)
