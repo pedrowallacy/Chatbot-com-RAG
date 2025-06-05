@@ -1,6 +1,11 @@
 <template>
   <div class="chat-container">
+    
     <div class="chat-history" ref="chatHistory">
+      <div class="welcome-banner"  v-if="showWelcome">
+  <h2>Olá{{ nomeAssistente ? `, sou  o assistente ${nomeAssistente}` : '' }}!</h2>
+  <p>Como posso ajudá-lo hoje?</p>
+</div>
       <div
         v-for="(msg, index) in historico"
         :key="index"
@@ -9,9 +14,9 @@
         <p class="chat-author">{{ msg.role === 'user' ? 'Você' : nomeAssistente }}</p>
         <div class="chat-bubble">
           <template v-if="msg.role === 'assistant' && loading && index === historico.length - 1">
-            <div style="display: flex; align-items: center; justify-content: center;">
-              <span class="spinner-inline"></span>
-              <span class="loading-text-inline">Aguarde...</span>
+            <div class="loading-indicator">
+              <span class="spinner"></span>
+              <span class="loading-text">Aguarde...</span>
             </div>
           </template>
           <template v-else-if="msg.role === 'assistant' && typingIndex === index">
@@ -23,10 +28,17 @@
         </div>
       </div>
     </div>
-    <div class="input-container">
+    <div :class="['input-container', { 'centered-input': showWelcome }]">
       <div class="input-inner">
-        <input v-model="pergunta" placeholder="Digite sua pergunta" @keyup.enter="enviarPergunta" />
-        <button @click="enviarPergunta">Enviar</button>
+        <textarea
+  v-model="pergunta"
+  :disabled="loading || typingIndex !== null"
+  placeholder="Digite sua pergunta"
+  @input="autoResize"
+  @keyup.enter.exact="enviarPergunta"
+  rows="1"
+  class="chat-textarea"/>
+        <button @click="enviarPergunta" :disable="loading || typingIndex !== null">Enviar</button>
       </div>
     </div>
   </div>
@@ -34,12 +46,26 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
+import { computed } from 'vue'
 
 const pergunta = ref('')
 const resposta = ref('')
 const historico = ref([])
 const chatHistory = ref(null)
 const loading = ref(false)
+
+const autoResize = (e) => {
+  const ta = e.target;
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+};
+
+
+const showWelcome = computed(() => {
+  // Esconde se houver pelo menos uma mensagem do usuário
+  return !historico.value.some(msg => msg.role === 'user')
+})
+
 
 // Nome dinâmico do assistente
 const nomeAssistente = ref('Assistente')
@@ -137,6 +163,7 @@ html, body {
 }
 
 .chat-container {
+  align-items: end;
   position: fixed;
   width: 100vw;
   height: 100vh;
@@ -209,8 +236,8 @@ html, body {
 }
 
 .chat-bubble {
-  background: #fffbe6;
-  color: #7a6a2f;
+  background: #b09821;
+  color: #211f1a;
   border-radius: 12px;
   padding: 18px 24px;
   word-break: break-word;
@@ -263,7 +290,7 @@ html, body {
   max-width: 820px;
   background: #fffbe6;
   border-radius: 24px;
-  padding: 14px 20px;
+  padding: 10px 20px;
   box-shadow: 0 2px 12px 0 rgba(191, 160, 70, 0.10);
   gap: 10px;
   border: 1.5px solid #e6c200;
@@ -321,33 +348,112 @@ html, body {
   font-family: 'Arial', 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* Estilos para o indicador de carregamento inline */
-.loading-indicator-inline {
+.loading-indicator {
   display: flex;
   align-items: center;
-  margin-left: 8px;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
-.spinner-inline {
+.spinner {
   width: 16px;
   height: 16px;
   border: 2px solid transparent;
   border-top-color: #e6c200;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  background: none;
+  display: inline-block;
 }
 
-.loading-text-inline {
+.loading-text {
   color: #7a6a2f;
   font-size: 1em;
-  margin-left: 6px;
+  margin-left: 10px;
+  display: inline-block;
+}
+
+.chat-bubble > .spinner,
+.chat-bubble > .loading-text {
   background: none !important;
   box-shadow: none !important;
-  padding: 0 !important;
   border: none !important;
-  outline: none !important;
-  filter: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.chat-bubble .loading-indicator {
+  background: none;
+  box-shadow: none;
+  border: none;
+}
+
+.chat-message.assistant .chat-bubble:has(.spinner) {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.welcome-banner {
+  width: 100%;
+  max-width: 700px;
+  margin: 250px auto 0 auto;
+  padding: 32px 24px 18px 24px;
+  background: none;
+  border-radius: 24px;
+  box-shadow:none;
+  text-align: center;
+  border: none;
+}
+
+.welcome-banner h2 {
+  margin: 0 0 8px 0;
+  color: #b09821;
+  font-size: 2em;
+  font-weight: 700;
+}
+
+.welcome-banner p {
+  margin: 0;
+  color: #7a6a2f;
+  font-size: 1.18em;
+  font-weight: 500;
+}
+
+.centered-input {
+  position: absolute !important;
+  margin: -40px auto 0 auto !important;
+  left: 50%;
+  right: 10;
+  bottom: auto;
+  top: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  width: 100%;
+}
+
+.chat-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #7a6a2f;
+  font-size: 1.13em;
+  outline: none;
+  padding: 0;
+  font-family: inherit;
+  resize: none;
+  min-height: 44px;
+  max-height: 180px;
+  line-height: 2.5;
+  overflow-y: auto;
 }
 
 @keyframes spin {
