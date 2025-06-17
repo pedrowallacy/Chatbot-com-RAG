@@ -18,7 +18,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 ROTAS_ASSISTENTES = {
     "suporte": os.getenv("ASSISTANT_ID_SUPORTE"),
-    "vendas": os.getenv("ASSISTANT_ID_VENDAS"),
+    "suporte pedro": os.getenv("ASSISTANT_ID_VENDAS"),
     "financas": os.getenv("ASSISTANT_ID_FINANCAS")
 }
 

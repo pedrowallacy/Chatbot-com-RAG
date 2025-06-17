@@ -1,32 +1,98 @@
 <template>
   <div class="chat-container">
     <div class="chat-history" ref="chatHistory">
-      <div
-        v-for="(msg, index) in historico"
-        :key="index"
-        :class="['chat-message', msg.role]"
-      >
-        <p class="chat-author">{{ msg.role === 'user' ? 'Você' : nomeAssistente }}</p>
-        <div class="chat-bubble">
-          <template v-if="msg.role === 'assistant' && loading && index === historico.length - 1">
-            <div style="display: flex; align-items: center; justify-content: center;">
-              <span class="spinner-inline"></span>
-              <span class="loading-text-inline">Aguarde...</span>
-            </div>
-          </template>
-          <template v-else-if="msg.role === 'assistant' && typingIndex === index">
-            {{ typingContent }}<span v-if="typingContent.length < msg.content.length">|</span>
-          </template>
-          <template v-else>
-            {{ msg.content }}
-          </template>
+      <div v-if="showWelcome" class="welcome-center">
+        <div class="welcome-banner">
+          <h2>Olá{{ nomeAssistente ? `, sou  o assistente ${nomeAssistente}` : '' }}!</h2>
+          <p>Como posso ajudá-lo hoje?</p>
+        </div>
+        <div class="input-container centered-input">
+          <div class="input-inner">
+            <textarea
+  v-model="pergunta"
+  :disabled="loading || typingIndex !== null"
+  placeholder="Digite sua pergunta"
+  @input="autoResize"
+  @keydown.enter.prevent="enviarPergunta"
+  @keydown.enter.shift="null"
+  rows="1"
+  class="chat-textarea"
+/>
+            <button 
+              @click="typingIndex !== null ? togglePause() : enviarPergunta()" 
+              :disabled="loading"
+            >
+              {{ typingIndex !== null ? '⏸️' : 'Enviar' }}
+            </button>
+          </div>
         </div>
       </div>
+      <template v-else>
+        <div
+          v-for="(msg, index) in historico"
+          :key="index"
+          :class="['chat-message', msg.role]"
+        >
+          <div class="message-container">
+            <div class="chat-bubble-container">
+              <button 
+                v-if="msg.role === 'user'"
+                @click="startEditing(index, msg.content)"
+                class="edit-btn"
+              >
+                ✎
+              </button>
+              <div class="bubble-content">
+                <!-- Nome do assistente só para mensagens do assistente -->
+                <p v-if="msg.role === 'assistant'" class="chat-author">{{ nomeAssistente }}</p>
+                <div class="chat-bubble">
+                  <template v-if="msg.role === 'assistant' && loading && index === historico.length - 1">
+                    <div class="loading-indicator">
+                      <span class="spinner"></span>
+                      <span class="loading-text">Pensando...</span>
+                    </div>
+                  </template>
+                  <template v-else-if="msg.role === 'assistant' && typingIndex === index">
+                    {{ typingContent }}
+                  </template>
+                  <template v-else>
+                    <template v-if="editingMessageIndex === index && msg.role === 'user'">
+                      <textarea
+                        v-model="editingContent"
+                        class="edit-textarea"
+                        @keydown.enter.prevent="saveEdit(index)"
+                      ></textarea>
+                      <button @click="saveEdit(index)" class="control-btn">✓</button>
+                    </template>
+                    <template v-else>
+                      {{ msg.content }}
+                    </template>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
-    <div class="input-container">
+    <div v-if="!showWelcome" class="input-container">
       <div class="input-inner">
-        <input v-model="pergunta" placeholder="Digite sua pergunta" @keyup.enter="enviarPergunta" />
-        <button @click="enviarPergunta">Enviar</button>
+        <textarea
+          v-model="pergunta"
+          :disabled="loading || typingIndex !== null"
+          placeholder="Digite sua pergunta"
+          @input="autoResize"
+          @keydown.enter.prevent="enviarPergunta"
+          @keydown.enter.shift="null"
+          rows="1"
+          class="chat-textarea"
+        />
+        <button 
+          @click="typingIndex !== null ? togglePause() : enviarPergunta()" 
+          :disabled="loading"
+        >
+          {{ typingIndex !== null ? '⏸️' : 'Enviar' }}
+        </button>
       </div>
     </div>
   </div>
@@ -34,19 +100,67 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
+import { computed } from 'vue'
 
 const pergunta = ref('')
 const resposta = ref('')
 const historico = ref([])
 const chatHistory = ref(null)
 const loading = ref(false)
+const isPaused = ref(false)
+const editingMessageIndex = ref(null)
+const editingContent = ref('')
+
+const togglePause = () => {
+  isPaused.value = true;
+  if (typingTimeout) {
+    clearTimeout(typingTimeout);
+  }
+  // Reseta os estados de digitação
+  typingIndex.value = null;
+  typingContent.value = '';
+  // Atualiza o conteúdo da última mensagem
+  if (historico.value.length > 0) {
+    const lastMsg = historico.value[historico.value.length - 1];
+    lastMsg.content = typingContent.value;
+  }
+}
+
+const startEditing = (index, content) => {
+  editingMessageIndex.value = index
+  editingContent.value = content
+}
+
+const saveEdit = (index) => {
+  if (editingContent.value.trim()) {
+    historico.value[index].content = editingContent.value
+  }
+  editingMessageIndex.value = null
+  editingContent.value = ''
+}
+
+const autoResize = (e) => {
+  const ta = e.target;
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+};
+
+
+const showWelcome = computed(() => {
+  // Esconde se houver pelo menos uma mensagem do usuário
+  return !historico.value.some(msg => msg.role === 'user')
+})
+
 
 // Nome dinâmico do assistente
 const nomeAssistente = ref('Assistente')
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:5000/assistant_name/suporte')
+    const res = await fetch('http://localhost:5000/assistant_name/suporte pedro', {
+      method: 'GET',
+      credentials: 'include'
+    })
     const data = await res.json()
     if (data.name) nomeAssistente.value = data.name
   } catch (e) {
@@ -64,12 +178,14 @@ const typeText = async (fullText, msgIndex) => {
   typingIndex.value = msgIndex
   let i = 0
   function typeChar() {
-    if (typingIndex.value !== msgIndex) return // Prevent race conditions
-    if (i <= fullText.length) {
+    if (typingIndex.value !== msgIndex) return
+    if (i <= fullText.length && !isPaused.value) {
       typingContent.value = fullText.slice(0, i)
       historico.value[msgIndex].content = typingContent.value
       i++
-      typingTimeout = setTimeout(typeChar, 18) // typing speed
+      typingTimeout = setTimeout(typeChar, 18)
+    } else if (i <= fullText.length) {
+      typingTimeout = setTimeout(typeChar, 100) // Continua checando se foi despausado
     } else {
       typingIndex.value = null
       typingContent.value = ''
@@ -80,9 +196,19 @@ const typeText = async (fullText, msgIndex) => {
 
 const enviarPergunta = async () => {
   if (!pergunta.value.trim()) return
-  historico.value.push({ role: 'user', content: pergunta.value })
-  const perguntaAtual = pergunta.value
-  pergunta.value = '' // Limpa o input imediatamente
+  const perguntaAtual = pergunta.value.trim();
+  historico.value.push({ role: 'user', content: perguntaAtual })
+  pergunta.value = ''
+
+  // Resetar altura do textarea após limpar
+  await nextTick(() => {
+    const ta = document.querySelector('.chat-textarea');
+    if (ta && !ta.value) {
+      ta.style.height = '44px';
+      ta.scrollTop = 0;
+    }
+  });
+
   loading.value = true
   historico.value.push({ role: 'assistant', content: '' })
 
@@ -92,18 +218,19 @@ const enviarPergunta = async () => {
     }
   })
 
-  const res = await fetch('http://localhost:5000/chat/suporte', {
+  // Altere aqui para chamar o assistente "suporte pedro"
+  const rota = assistente;
+  const res = await fetch(`http://localhost:5000/chat/${rota}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
     body: new URLSearchParams({ pergunta: perguntaAtual }),
     credentials: 'include'
-  })
+  });
 
   const data = await res.json()
   loading.value = false
-  // Typing effect for assistant
   await typeText(data.resposta, historico.value.length - 1)
 
   await nextTick(() => {
@@ -137,6 +264,7 @@ html, body {
 }
 
 .chat-container {
+  align-items: end;
   position: fixed;
   width: 100vw;
   height: 100vh;
@@ -201,16 +329,24 @@ html, body {
   margin-right: auto;
 }
 
-.chat-author {
-  font-size: 0.85em;
-  color: #8e8ea0;
-  margin-bottom: 2px;
-  margin-left: 6px;
+.chat-bubble-container {
+  display: flex;
+  flex-direction: row; /* Ícone à esquerda, mensagem à direita */
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-message.user .chat-bubble-container {
+  flex-direction: row; /* Ícone à esquerda, mensagem à direita */
+}
+
+.bubble-content {
+  flex: 1;
 }
 
 .chat-bubble {
-  background: #fffbe6;
-  color: #7a6a2f;
+  background: #b09821;
+  color: #211f1a;
   border-radius: 12px;
   padding: 18px 24px;
   word-break: break-word;
@@ -248,10 +384,24 @@ html, body {
   padding: 16px;
   background: transparent;
   box-shadow: none;
-  z-index: 100;
-  gap: 8px;
+  z-index: 1000;
+  gap: 80px;
   margin-top: auto;
   border-top: none;
+}
+
+.input-container:not(.centered-input) {
+  flex-direction: column-reverse;
+  align-items: center;
+  display: flex;
+}
+
+.input-container:not(.centered-input) .chat-textarea {
+  min-height: 44px;
+  max-height: 180px !important;
+  overflow-y: auto;
+  resize: none;
+  height: auto;
 }
 
 /*entrada da pergunta*/
@@ -263,21 +413,23 @@ html, body {
   max-width: 820px;
   background: #fffbe6;
   border-radius: 24px;
-  padding: 14px 20px;
+  padding: 10px 20px;
   box-shadow: 0 2px 12px 0 rgba(191, 160, 70, 0.10);
-  gap: 10px;
+  gap: none;
   border: 1.5px solid #e6c200;
 }
 
 /*entrada da pergunta*/
 .input-inner input {
-  flex: 1;
+  flex: 100%;
+  height: 44px;
   background: transparent;
   border: none;
   color: #7a6a2f;
   font-size: 1.13em;
   outline: none;
-  padding: 0;
+  padding: 10px 12px;
+  resize: none;
   font-family: inherit;
 }
 
@@ -287,7 +439,7 @@ html, body {
   opacity: 0.7;
   font-size: 1.13em;
   font-family: inherit;
-  font-weight: 400;
+  font-weight: 100;
 }
 
 /*botão de enviar*/
@@ -321,37 +473,201 @@ html, body {
   font-family: 'Arial', 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* Estilos para o indicador de carregamento inline */
-.loading-indicator-inline {
+.loading-indicator {
   display: flex;
   align-items: center;
-  margin-left: 8px;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
-.spinner-inline {
+.spinner {
   width: 16px;
   height: 16px;
   border: 2px solid transparent;
   border-top-color: #e6c200;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  background: none;
+  display: inline-block;
 }
 
-.loading-text-inline {
+.loading-text {
   color: #7a6a2f;
   font-size: 1em;
-  margin-left: 6px;
+  margin-left: 10px;
+  display: inline-block;
+}
+
+.chat-bubble > .spinner,
+.chat-bubble > .loading-text {
   background: none !important;
   box-shadow: none !important;
-  padding: 0 !important;
   border: none !important;
-  outline: none !important;
-  filter: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.chat-bubble .loading-indicator {
+  background: none;
+  box-shadow: none;
+  border: none;
+}
+
+.chat-message.assistant .chat-bubble:has(.spinner) {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.welcome-banner {
+  width: 100%;
+  max-width: 700px;
+  margin: 250px auto 0 auto;
+  padding: 32px 24px 18px 24px;
+  background: none;
+  border-radius: 24px;
+  box-shadow:none;
+  text-align: center;
+  border: none;
+}
+
+.welcome-banner h2 {
+  margin: 0 0 8px 0;
+  color: #b09821;
+  font-size: 2em;
+  font-weight: 700;
+}
+
+.welcome-banner p {
+  margin: 0;
+  color: #7a6a2f;
+  font-size: 1.18em;
+  font-weight: 500;
+}
+
+.centered-input {
+  position: static !important;
+  margin: 100px auto 50 auto !important;
+  left: 50px;
+  right: 50px;
+  bottom: auto;
+  top: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  transform:none;
+  width: 100%;
+}
+
+.chat-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #7a6a2f;
+  font-size: 1.13em;
+  outline: none;
+  padding: 0 8px;
+  font-family: inherit;
+  resize: none;
+  min-height: 44px;
+  max-height: 180px;
+  line-height: 2.5;
+  overflow-y: auto;
+}
+
+.chat-textarea::-webkit-scrollbar {
+  width: 20px;
+  background: transparent;
+}
+
+.chat-textarea::-webkit-scrollbar-thumb {
+  background: #e6c20033; /* dourado translúcido */
+  border-radius: -100px;
+}
+
+.chat-textarea {
+  scrollbar-width: thick;
+  scrollbar-color: #e6c20033 transparent;
+}
+
+.centered-input .chat-textarea {
+  min-height: 44px;
+  max-height: 180px;
+  resize: none;
+  overflow-y: auto;
+}
+
+.chat-textarea:empty,
+.chat-textarea:placeholder-shown {
+  overflow-y: hidden !important;
+}
+
+.control-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.control-btn:hover {
+  opacity: 1;
+}
+
+.edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #7a6a2f;
+  font-size: 1.2em;
+  align-self: flex-start;
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.chat-message.user:hover .edit-btn {
+  opacity: 0.7;
+}
+
+.edit-btn:hover {
+  opacity: 1;
+}
+
+.edit-textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #e6c200;
+  border-radius: 8px;
+  background: #fffbe6;
+  color: #7a6a2f;
+  font-family: inherit;
+  font-size: inherit;
+  resize: vertical;
+}
+
+.chat-author {
+  color: #b09821;
+  font-size: 0.98em;
+  font-weight: 700;
+  margin-bottom: 2px;
+  margin-left: 8px;
+  margin-top: 0;
+  text-align: left;
 }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-</style>
+}</style>
