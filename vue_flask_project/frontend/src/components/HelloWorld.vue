@@ -9,7 +9,7 @@
         <div class="input-container centered-input">
           <div class="input-inner">
             <textarea
-  v-model="pergunta"
+  v-model="pergunta"          
   :disabled="loading || typingIndex !== null"
   placeholder="Digite sua pergunta"
   @input="autoResize"
