@@ -90,13 +90,8 @@ def send_message():
 
 @app.route("/chat/<rota_assistente>", methods=["POST"])
 def chat_especifico(rota_assistente):
-    print(f"rota_assistente {rota_assistente}")
-    print("entrou no barra chat_especifico")
     pergunta = request.form.get("pergunta", "")
-    print(f"pergunta {pergunta}")
     assistant_id = ROTAS_ASSISTENTES.get(rota_assistente)
-    print(f"assistant_id {assistant_id}")
-
     if not assistant_id:
         return jsonify({"erro": "Rota de assistente inválida"}), 404
 
@@ -104,7 +99,6 @@ def chat_especifico(rota_assistente):
         resposta = enviar_para_assistente(assistant_id, pergunta)
         return jsonify({"resposta": resposta})
     except Exception as e:
-        print(f"Erro ao enviar para assistente: {e}")
         return jsonify({"erro": str(e)}), 500
     
 @app.route("/reset", methods=["POST"])
@@ -117,12 +111,12 @@ def reset_thread():
 def get_assistant_name(rota_assistente):
     assistant_id = ROTAS_ASSISTENTES.get(rota_assistente)
     if not assistant_id:
-        return jsonify({"erro": "Rota de assistente inválida"}), 404
+        return jsonify({"name": "Assistente"})
     try:
         assistant = client.beta.assistants.retrieve(assistant_id)
         return jsonify({"name": assistant.name})
     except Exception as e:
-        return jsonify({"erro": str(e)}), 500
+        return jsonify({"name": "Assistente"})
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -99,8 +99,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
-import { computed } from 'vue'
+import { ref, nextTick, watchEffect, computed } from 'vue'
 
 const pergunta = ref('')
 const resposta = ref('')
@@ -110,6 +109,53 @@ const loading = ref(false)
 const isPaused = ref(false)
 const editingMessageIndex = ref(null)
 const editingContent = ref('')
+
+// --- Correção: tornar assistenteParam e rota reativos ---
+const assistenteParam = ref(new URLSearchParams(window.location.search).get('assistente') || 'legislador')
+const rota = computed(() => assistenteParam.value === 'pedro' ? 'suporte pedro' : 'suporte')
+
+// Atualiza assistenteParam se a URL mudar (ex: usuário muda o parâmetro na barra de endereços)
+window.addEventListener('popstate', () => {
+  assistenteParam.value = new URLSearchParams(window.location.search).get('assistente') || 'legislador'
+})
+
+const nomeAssistente = ref('Assistente')
+watchEffect(async () => {
+  try {
+    const res = await fetch(`http://localhost:5000/assistant_name/${rota.value}`)
+    const data = await res.json()
+    if (data.name) nomeAssistente.value = data.name
+    else nomeAssistente.value = 'Assistente'
+  } catch (e) {
+    nomeAssistente.value = 'Assistente'
+  }
+})
+
+// Typing effect state
+const typingIndex = ref(null)
+const typingContent = ref('')
+let typingTimeout = null
+
+const typeText = async (fullText, msgIndex) => {
+  typingContent.value = ''
+  typingIndex.value = msgIndex
+  let i = 0
+  function typeChar() {
+    if (typingIndex.value !== msgIndex) return
+    if (i <= fullText.length && !isPaused.value) {
+      typingContent.value = fullText.slice(0, i)
+      historico.value[msgIndex].content = typingContent.value
+      i++
+      typingTimeout = setTimeout(typeChar, 18)
+    } else if (i <= fullText.length) {
+      typingTimeout = setTimeout(typeChar, 100) // Continua checando se foi despausado
+    } else {
+      typingIndex.value = null
+      typingContent.value = ''
+    }
+  }
+  typeChar()
+}
 
 const togglePause = () => {
   isPaused.value = true;
@@ -151,49 +197,7 @@ const showWelcome = computed(() => {
   return !historico.value.some(msg => msg.role === 'user')
 })
 
-
-// Nome dinâmico do assistente
-const nomeAssistente = ref('Assistente')
-
-onMounted(async () => {
-  try {
-    const res = await fetch('http://localhost:5000/assistant_name/suporte', {
-      method: 'GET',
-      credentials: 'include'
-    })
-    const data = await res.json()
-    if (data.name) nomeAssistente.value = data.name
-  } catch (e) {
-    nomeAssistente.value = 'Assistente'
-  }
-})
-
-// Typing effect state
-const typingIndex = ref(null)
-const typingContent = ref('')
-let typingTimeout = null
-
-const typeText = async (fullText, msgIndex) => {
-  typingContent.value = ''
-  typingIndex.value = msgIndex
-  let i = 0
-  function typeChar() {
-    if (typingIndex.value !== msgIndex) return
-    if (i <= fullText.length && !isPaused.value) {
-      typingContent.value = fullText.slice(0, i)
-      historico.value[msgIndex].content = typingContent.value
-      i++
-      typingTimeout = setTimeout(typeChar, 18)
-    } else if (i <= fullText.length) {
-      typingTimeout = setTimeout(typeChar, 100) // Continua checando se foi despausado
-    } else {
-      typingIndex.value = null
-      typingContent.value = ''
-    }
-  }
-  typeChar()
-}
-
+// Altere aqui para chamar o assistente "suporte pedro"
 const enviarPergunta = async () => {
   if (!pergunta.value.trim()) return
   const perguntaAtual = pergunta.value.trim();
@@ -218,9 +222,8 @@ const enviarPergunta = async () => {
     }
   })
 
-  // Altere aqui para chamar o assistente "suporte pedro"
-  const rota = "suporte";
-  const res = await fetch(`http://localhost:5000/chat/${rota}`, {
+  // Use a rota reativa
+  const res = await fetch(`http://localhost:5000/chat/${rota.value}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
