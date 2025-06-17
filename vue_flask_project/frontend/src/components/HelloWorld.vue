@@ -157,7 +157,7 @@ const nomeAssistente = ref('Assistente')
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:5000/assistant_name/suporte pedro', {
+    const res = await fetch('http://localhost:5000/assistant_name/suporte', {
       method: 'GET',
       credentials: 'include'
     })
@@ -219,7 +219,7 @@ const enviarPergunta = async () => {
   })
 
   // Altere aqui para chamar o assistente "suporte pedro"
-  const rota = assistente;
+  const rota = "suporte";
   const res = await fetch(`http://localhost:5000/chat/${rota}`, {
     method: 'POST',
     headers: {
