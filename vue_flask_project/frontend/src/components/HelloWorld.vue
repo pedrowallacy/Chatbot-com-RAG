@@ -112,17 +112,18 @@ const editingContent = ref('')
 
 // --- Correção: tornar assistenteParam e rota reativos ---
 const assistenteParam = ref(new URLSearchParams(window.location.search).get('assistente') || 'legislador')
-const rota = computed(() => assistenteParam.value === 'pedro' ? 'suporte pedro' : 'suporte')
+const rota = computed(() => assistenteParam.value)
 
 // Atualiza assistenteParam se a URL mudar (ex: usuário muda o parâmetro na barra de endereços)
 window.addEventListener('popstate', () => {
   assistenteParam.value = new URLSearchParams(window.location.search).get('assistente') || 'legislador'
+  
 })
 
 const nomeAssistente = ref('Assistente')
 watchEffect(async () => {
   try {
-    const res = await fetch(`http://localhost:5000/assistant_name/${rota.value}`)
+    const res = await fetch(`http://172.17.249.176:5000/assistant_name/${rota.value}`)
     const data = await res.json()
     if (data.name) nomeAssistente.value = data.name
     else nomeAssistente.value = 'Assistente'
@@ -223,7 +224,7 @@ const enviarPergunta = async () => {
   })
 
   // Use a rota reativa
-  const res = await fetch(`http://localhost:5000/chat/${rota.value}`, {
+  const res = await fetch(`http://172.17.249.176:5000/chat/${rota.value}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'

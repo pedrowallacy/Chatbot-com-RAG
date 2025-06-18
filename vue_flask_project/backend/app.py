@@ -17,23 +17,24 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev_key")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 ROTAS_ASSISTENTES = {
-    "suporte": os.getenv("ASSISTANT_ID_SUPORTE"),
-    "suporte pedro": os.getenv("ASSISTANT_ID_VENDAS"),
-    "financas": os.getenv("ASSISTANT_ID_FINANCAS")
+    "legislador": os.getenv("ASSISTANT_ID_LEGISLADOR"),
+    "pedro": os.getenv("ASSISTANT_ID_PEDRO"),
+    "maxsei": os.getenv("ASSISTANT_ID_MAXSEI")
 }
 
-def enviar_para_assistente(assistant_id, pergunta):
-    thread_id = session.get("thread_id")
+def enviar_para_assistente(assistant_id, pergunta, rota_assistente):
+    thread_key = f"thread_id_{rota_assistente}"
+    thread_id = session.get(thread_key)
     
     if not thread_id:
         # Se não houver thread_id na sessão, cria uma nova thread
         thread = client.beta.threads.create()
         thread_id = thread.id
-        session["thread_id"] = thread.id
-        print(f"Nova thread criada: {thread_id}")
+        session[thread_key] = thread.id
+        print(f"Nova thread criada para {rota_assistente}: {thread_id}")
     else:
         # Se já houver thread_id na sessão, usa a thread existente
-        print(f"Usando thread existente: {thread_id}")
+        print(f"Usando thread existente {rota_assistente}: {thread_id}")
 
     client.beta.threads.messages.create(
         thread_id=thread_id,
@@ -90,15 +91,21 @@ def send_message():
 
 @app.route("/chat/<rota_assistente>", methods=["POST"])
 def chat_especifico(rota_assistente):
+    print(f"rota_assistente {rota_assistente}")
+    print("entrou no barra chat_especifico")
     pergunta = request.form.get("pergunta", "")
+    print(f"pergunta {pergunta}")
     assistant_id = ROTAS_ASSISTENTES.get(rota_assistente)
+    print(f"assistant_id {assistant_id}")
+
     if not assistant_id:
         return jsonify({"erro": "Rota de assistente inválida"}), 404
 
     try:
-        resposta = enviar_para_assistente(assistant_id, pergunta)
+        resposta = enviar_para_assistente(assistant_id, pergunta, rota_assistente)
         return jsonify({"resposta": resposta})
     except Exception as e:
+        print(f"Erro ao enviar para assistente: {e}")
         return jsonify({"erro": str(e)}), 500
     
 @app.route("/reset", methods=["POST"])
@@ -111,12 +118,12 @@ def reset_thread():
 def get_assistant_name(rota_assistente):
     assistant_id = ROTAS_ASSISTENTES.get(rota_assistente)
     if not assistant_id:
-        return jsonify({"name": "Assistente"})
+        return jsonify({"erro": "Rota de assistente inválida"}), 404
     try:
         assistant = client.beta.assistants.retrieve(assistant_id)
         return jsonify({"name": assistant.name})
     except Exception as e:
-        return jsonify({"name": "Assistente"})
+        return jsonify({"erro": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
