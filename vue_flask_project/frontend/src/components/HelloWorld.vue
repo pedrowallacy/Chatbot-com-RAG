@@ -123,7 +123,7 @@ window.addEventListener('popstate', () => {
 const nomeAssistente = ref('Assistente')
 watchEffect(async () => {
   try {
-    const res = await fetch(`http://172.17.249.176:5000/assistant_name/${rota.value}`)
+    const res = await fetch(`http://localhost:5000/assistant_name/${rota.value}`)
     const data = await res.json()
     if (data.name) nomeAssistente.value = data.name
     else nomeAssistente.value = 'Assistente'
@@ -224,7 +224,7 @@ const enviarPergunta = async () => {
   })
 
   // Use a rota reativa
-  const res = await fetch(`http://172.17.249.176:5000/chat/${rota.value}`, {
+  const res = await fetch(`http://localhost:5000/chat/${rota.value}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
