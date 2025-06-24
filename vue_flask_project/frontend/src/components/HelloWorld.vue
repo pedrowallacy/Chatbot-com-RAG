@@ -42,6 +42,8 @@
               >
                 ✎
               </button>
+              <div class="avatar" v-if="msg.role === 'assistant'">🤖</div>
+<div class="avatar user" v-if="msg.role === 'user'">🧑</div>
               <div class="bubble-content">
                 <!-- Nome do assistente só para mensagens do assistente -->
                 <p v-if="msg.role === 'assistant'" class="chat-author">{{ nomeAssistente }}</p>
@@ -165,12 +167,9 @@ const togglePause = () => {
   }
   // Reseta os estados de digitação
   typingIndex.value = null;
-  typingContent.value = '';
-  // Atualiza o conteúdo da última mensagem
-  if (historico.value.length > 0) {
-    const lastMsg = historico.value[historico.value.length - 1];
-    lastMsg.content = typingContent.value;
-  }
+  //typingContent.value = '';
+  // NÃO apague a última mensagem do assistente!
+  // Apenas pare o efeito de digitação, mantendo o texto já exibido
 }
 
 const startEditing = (index, content) => {
@@ -200,6 +199,7 @@ const showWelcome = computed(() => {
 
 // Altere aqui para chamar o assistente "suporte pedro"
 const enviarPergunta = async () => {
+  isPaused.value = false;
   if (!pergunta.value.trim()) return
   const perguntaAtual = pergunta.value.trim();
   historico.value.push({ role: 'user', content: perguntaAtual })
@@ -349,15 +349,21 @@ html, body {
 }
 
 .chat-bubble {
-  background: #b09821;
-  color: #211f1a;
-  border-radius: 12px;
-  padding: 18px 24px;
-  word-break: break-word;
-  font-size: 1.08em;
-  line-height: 1.7;
-  border: 1.5px solid #e6c200;
-  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
+  background: linear-gradient(120deg, #f7d774 80%, #fffbe6 100%);
+  color: #7a6a2f;
+  border-radius: 18px 18px 6px 18px;
+  padding: 18px 28px;
+  border: none;
+  box-shadow: 0 4px 16px rgba(191, 160, 70, 0.12);
+  font-size: 1.12em;
+  transition: box-shadow 0.2s;
+}
+
+.chat-message.assistant .chat-bubble {
+  background: linear-gradient(120deg, #fffbe6 80%, #f7d774 100%);
+  color: #b09821;
+  border-radius: 18px 18px 18px 6px;
+  box-shadow: 0 4px 16px rgba(191, 160, 70, 0.10);
 }
 
 .chat-message.assistant .chat-bubble {
@@ -415,12 +421,18 @@ html, body {
   justify-content: center;
   width: 100%;
   max-width: 820px;
-  background: #fffbe6;
-  border-radius: 24px;
-  padding: 10px 20px;
-  box-shadow: 0 2px 12px 0 rgba(191, 160, 70, 0.10);
-  gap: none;
+  background: #fff;
+  border-radius: 32px;
+  padding: 12px 28px;
+  box-shadow: 0 2px 16px 0 rgba(191, 160, 70, 0.10);
   border: 1.5px solid #e6c200;
+  transition: box-shadow 0.2s;
+}
+
+/*entrada da pergunta*/
+.input-inner:focus-within {
+  box-shadow: 0 4px 24px 0 rgba(191, 160, 70, 0.18);
+  border-color: #b09821;
 }
 
 /*entrada da pergunta*/
@@ -448,28 +460,22 @@ html, body {
 
 /*botão de enviar*/
 .input-inner button {
-  background: #e6c200;
-  border: none;
+  background: linear-gradient(90deg, #e6c200 60%, #b09821 100%);
   color: #fff;
   border-radius: 24px;
   min-width: 90px;
   height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
   font-size: 1.15em;
-  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
-  padding: 0 24px;
   font-weight: 600;
-  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
 }
 
 /*botão de enviar*/
 .input-inner button:hover {
-  background: #bfa046;
+  background: linear-gradient(90deg, #b09821 60%, #e6c200 100%);
   color: #fffbe6;
+  box-shadow: 0 4px 16px rgba(191, 160, 70, 0.18);
 }
 
 /* Exemplo para mudar só no chat: */
@@ -480,10 +486,9 @@ html, body {
 .loading-indicator {
   display: flex;
   align-items: center;
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
+  gap: 10px;
+  font-style: italic;
+  color: #b09821;
 }
 
 .spinner {
@@ -674,4 +679,23 @@ html, body {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}</style>
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: #fffbe6;
+  border: 2px solid #e6c200;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  margin-right: 10px;
+  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
+}
+.avatar.user {
+  background: #f7d774;
+  border-color: #b09821;
+}
+</style>
