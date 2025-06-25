@@ -22,7 +22,7 @@
               @click="typingIndex !== null ? togglePause() : enviarPergunta()" 
               :disabled="loading"
             >
-              {{ typingIndex !== null ? '⏸️' : 'Enviar' }}
+              {{ typingIndex !== null ? '⏸️' : '➤' }}
             </button>
           </div>
         </div>
@@ -35,15 +35,8 @@
         >
           <div class="message-container">
             <div class="chat-bubble-container">
-              <button 
-                v-if="msg.role === 'user'"
-                @click="startEditing(index, msg.content)"
-                class="edit-btn"
-              >
-                ✎
-              </button>
               <div class="avatar" v-if="msg.role === 'assistant'">🤖</div>
-<div class="avatar user" v-if="msg.role === 'user'">🧑</div>
+              <div class="avatar user" v-if="msg.role === 'user'">🧑</div>
               <div class="bubble-content">
                 <!-- Nome do assistente só para mensagens do assistente -->
                 <p v-if="msg.role === 'assistant'" class="chat-author">{{ nomeAssistente }}</p>
@@ -72,6 +65,31 @@
                   </template>
                 </div>
               </div>
+              <button 
+                v-if="msg.role === 'user'"
+                @click="startEditing(index, msg.content)"
+                class="edit-btn"
+              >
+                ✎
+              </button>
+            </div>
+            <!-- Botão de cópia abaixo da bolha, fora do container da resposta -->
+            <div v-if="msg.role === 'assistant'" class="copy-container">
+              <button class="copy-btn" @click="copiarResposta(msg.content, index)">
+                <template v-if="copyFeedbackIndex === index">
+                  <!-- Ícone de correto minimalista -->
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="10" fill="#e6c200"/>
+                    <path d="M7 11.5l3 3 5-5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </template>
+                <template v-else>
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="6" width="10" height="12" rx="3" stroke="#b09821" stroke-width="1.5" fill="#fffbe6"/>
+                    <rect x="2.75" y="2.75" width="10.5" height="12.5" rx="3" stroke="#e6c200" stroke-width="1.5" fill="none"/>
+                  </svg>
+                </template>
+              </button>
             </div>
           </div>
         </div>
@@ -93,10 +111,13 @@
           @click="typingIndex !== null ? togglePause() : enviarPergunta()" 
           :disabled="loading"
         >
-          {{ typingIndex !== null ? '⏸️' : 'Enviar' }}
+          {{ typingIndex !== null ? '||' : '➤' }}
         </button>
       </div>
     </div>
+    <!--<div v-if="showCopyGlobalFeedback" class="copy-global-feedback">
+      Copiado para a área de transferência
+    </div>-->
   </div>
 </template>
 
@@ -243,6 +264,21 @@ const enviarPergunta = async () => {
     }
   })
 }
+
+const copyFeedbackIndex = ref(null)
+let copyTimeout = null
+const showCopyGlobalFeedback = ref(false)
+
+const copiarResposta = (texto, index) => {
+  navigator.clipboard.writeText(texto)
+  copyFeedbackIndex.value = index
+  showCopyGlobalFeedback.value = true
+  if (copyTimeout) clearTimeout(copyTimeout)
+  copyTimeout = setTimeout(() => {
+    copyFeedbackIndex.value = null
+    showCopyGlobalFeedback.value = false
+  }, 1200)
+}
 </script>
 
 <style scoped>
@@ -349,33 +385,33 @@ html, body {
 }
 
 .chat-bubble {
-  background: linear-gradient(120deg, #f7d774 80%, #fffbe6 100%);
+  background: #f9ecd2;
   color: #7a6a2f;
   border-radius: 18px 18px 6px 18px;
   padding: 18px 28px;
-  border: none;
-  box-shadow: 0 4px 16px rgba(191, 160, 70, 0.12);
+  border: 1.5px solid #e6c20033; /* dourado translúcido */
+  box-shadow: 0 2px 8px rgba(191, 160, 70, 0.08);
   font-size: 1.12em;
   transition: box-shadow 0.2s;
 }
 
 .chat-message.assistant .chat-bubble {
-  background: linear-gradient(120deg, #fffbe6 80%, #f7d774 100%);
+  background: #fffbe6;
   color: #b09821;
   border-radius: 18px 18px 18px 6px;
-  box-shadow: 0 4px 16px rgba(191, 160, 70, 0.10);
+  border: 1.5px solid #e6c20022;
 }
 
 .chat-message.assistant .chat-bubble {
   margin-right: 20px;
-  background: #fffbe6;
+  background: #fbe7b3;
   color: #7a6a2f;
   border: 1.5px solid #e6c200;
 }
 
 .chat-message.user .chat-bubble {
   margin-left: 20px;
-  background: #f7d774;
+  background: #f9ecd2;
   color: #7a6a2f;
   border-radius: 12px;
   border: 1.5px solid #e6c200;
@@ -421,7 +457,7 @@ html, body {
   justify-content: center;
   width: 100%;
   max-width: 820px;
-  background: #fff;
+  background: #f9ecd2; /* bege claro */
   border-radius: 32px;
   padding: 12px 28px;
   box-shadow: 0 2px 16px 0 rgba(191, 160, 70, 0.10);
@@ -433,6 +469,7 @@ html, body {
 .input-inner:focus-within {
   box-shadow: 0 4px 24px 0 rgba(191, 160, 70, 0.18);
   border-color: #b09821;
+  background: #fbe7b3; /* bege mais intenso ao focar */
 }
 
 /*entrada da pergunta*/
@@ -469,6 +506,7 @@ html, body {
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(191, 160, 70, 0.10);
   transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  border: none;
 }
 
 /*botão de enviar*/
@@ -682,9 +720,9 @@ html, body {
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
-  background: #fffbe6;
+  width: 40px;
+  height: 40px;
+  background: #f4f0de;
   border: 2px solid #e6c200;
   border-radius: 50%;
   display: flex;
@@ -697,5 +735,70 @@ html, body {
 .avatar.user {
   background: #f7d774;
   border-color: #b09821;
+  margin-right: -10px;
+  margin-left: 10px;
+}
+
+.copy-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  margin-left: 54px;
+  min-height: 28px;
+}
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+}
+.copy-btn:hover {
+  background: #fbe7b3;
+  opacity: 1;
+}
+.copy-feedback {
+  color: #b09821;
+  font-size: 1em;
+  margin-left: 6px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.copy-global-feedback {
+  position: fixed;
+  left: 32px;
+  bottom: 32px;
+  background: #141414ee;
+  color: #efefea;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 1.08em;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(191, 160, 70, 0.10);
+  z-index: 9999;
+  opacity: 1;
+  /*animation: fadeCopy 1.2s;*/
+}
+
+@keyframes fadeCopy {
+  0% { opacity: 0; transform: translateY(20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(20px); }
+}
+
+/* Centraliza e aproxima o ícone de edição */
+.edit-btn {
+  align-self: center !important;
+  margin-top: 0 !important;
+  margin-left: 8px !important;
+  margin-right: 0 !important;
 }
 </style>
