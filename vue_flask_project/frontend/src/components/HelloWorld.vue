@@ -74,23 +74,27 @@
               </button>
             </div>
             <!-- Botão de cópia abaixo da bolha, fora do container da resposta -->
-            <div v-if="msg.role === 'assistant'" class="copy-container">
-              <button class="copy-btn" @click="copiarResposta(msg.content, index)">
-                <template v-if="copyFeedbackIndex === index">
-                  <!-- Ícone de correto minimalista -->
-                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="11" cy="11" r="10" fill="#e6c200"/>
-                    <path d="M7 11.5l3 3 5-5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </template>
-                <template v-else>
-                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="6" y="6" width="10" height="12" rx="3" stroke="#b09821" stroke-width="1.5" fill="#fffbe6"/>
-                    <rect x="2.75" y="2.75" width="10.5" height="12.5" rx="3" stroke="#e6c200" stroke-width="1.5" fill="none"/>
-                  </svg>
-                </template>
-              </button>
-            </div>
+            <div
+  v-if="msg.role === 'assistant' && typingIndex !== index && !loading"
+  class="copy-container"
+>
+  <button class="copy-btn" @click="copiarResposta(msg.content, index)">
+    <template v-if="copyFeedbackIndex === index">
+      <!-- Ícone de correto minimalista -->
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="11" r="10" fill="#e6c200"/>
+        <path d="M7 11.5l3 3 5-5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </template>
+    <template v-else>
+      <!-- Ícone de cópia minimalista -->
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="10" height="12" rx="3" stroke="#b09821" stroke-width="1.5" fill="#fffbe6"/>
+        <rect x="2.75" y="2.75" width="10.5" height="12.5" rx="3" stroke="#e6c200" stroke-width="1.5" fill="none"/>
+      </svg>
+    </template>
+  </button>
+</div>
           </div>
         </div>
       </template>
@@ -111,13 +115,10 @@
           @click="typingIndex !== null ? togglePause() : enviarPergunta()" 
           :disabled="loading"
         >
-          {{ typingIndex !== null ? '||' : '➤' }}
+          {{ typingIndex !== null ? '■' : '➤' }}
         </button>
       </div>
     </div>
-    <!--<div v-if="showCopyGlobalFeedback" class="copy-global-feedback">
-      Copiado para a área de transferência
-    </div>-->
   </div>
 </template>
 
@@ -170,7 +171,7 @@ const typeText = async (fullText, msgIndex) => {
       typingContent.value = fullText.slice(0, i)
       historico.value[msgIndex].content = typingContent.value
       i++
-      typingTimeout = setTimeout(typeChar, 18)
+      typingTimeout = setTimeout(typeChar, 10)
     } else if (i <= fullText.length) {
       typingTimeout = setTimeout(typeChar, 100) // Continua checando se foi despausado
     } else {
@@ -404,9 +405,9 @@ html, body {
 
 .chat-message.assistant .chat-bubble {
   margin-right: 20px;
-  background: #fbe7b3;
-  color: #7a6a2f;
-  border: 1.5px solid #e6c200;
+  background: none;
+  color: #3a3521;
+  border: none;
 }
 
 .chat-message.user .chat-bubble {
