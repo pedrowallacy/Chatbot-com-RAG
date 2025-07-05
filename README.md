@@ -1,0 +1,1 @@
+Consiste em um chatbot em Python que utiliza dos assistentes da OpenAi para compreensão de contextos e comunicações. Também é utilizado tecnologias como Flask para criação da base e fundamentos web; e Vue.js para interfaces e designs.
